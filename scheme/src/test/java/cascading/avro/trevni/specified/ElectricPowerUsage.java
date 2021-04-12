@@ -13,7 +13,9 @@ public class ElectricPowerUsage extends org.apache.avro.specific.SpecificRecordB
   @Deprecated public java.util.List<cascading.avro.trevni.specified.DevicePowerEvent> devicePowerEventList;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public ElectricPowerUsage() {}
 
@@ -106,6 +108,14 @@ public class ElectricPowerUsage extends org.apache.avro.specific.SpecificRecordB
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.trevni.specified.ElectricPowerUsage.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.addressCode)) {
+        this.addressCode = data().deepCopy(fields()[0].schema(), other.addressCode);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.devicePowerEventList)) {
+        this.devicePowerEventList = data().deepCopy(fields()[1].schema(), other.devicePowerEventList);
+        fieldSetFlags()[1] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing ElectricPowerUsage instance */

@@ -36,7 +36,7 @@
   </scm>
 
   <properties>
-	<avro.version>1.7.7</avro.version>
+    <avro.version>1.10.2</avro.version>
   </properties>
 
   <build>
@@ -53,8 +53,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>2.3.2</version>
           <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
+            <source>1.8</source>
+            <target>1.8</target>
             <encoding>UTF-8</encoding>
           </configuration>
         </plugin>
@@ -82,10 +82,10 @@
     <repository>
       <id>conjars</id>
       <name>Concurrent Conjars repository</name>
-      <url>http://conjars.org/repo</url>
+      <url>https://conjars.org/repo</url>
     </repository>
   </distributionManagement>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>

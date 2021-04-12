@@ -1,16 +1,16 @@
 /*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package cascading.avro;
 
@@ -31,6 +31,7 @@ import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.mapred.*;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -50,7 +51,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, Object[], Object[]> {
+public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollector, Object[], Object[]> {
 
     private static final String DEFAULT_RECORD_NAME = "CascadingAvroRecord";
     private static final PathFilter filter = new PathFilter() {
@@ -143,7 +144,7 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      */
     @Override
     public void sink(
-            FlowProcess<JobConf> flowProcess,
+            FlowProcess<? extends Configuration> flowProcess,
             SinkCall<Object[], OutputCollector> sinkCall)
             throws IOException {
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry();
@@ -168,7 +169,7 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      */
     @Override
     public void sinkPrepare(
-            FlowProcess<JobConf> flowProcess,
+            FlowProcess<? extends Configuration> flowProcess,
             SinkCall<Object[], OutputCollector> sinkCall)
             throws IOException {
         sinkCall.setContext(new Object[]{schema});
@@ -188,16 +189,16 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      */
     @Override
     public void sinkConfInit(
-            FlowProcess<JobConf> flowProcess,
-            Tap<JobConf, RecordReader, OutputCollector> tap,
-            JobConf conf) {
+            FlowProcess<? extends Configuration> flowProcess,
+            Tap<Configuration, RecordReader, OutputCollector> tap,
+            Configuration conf) {
 
         if (schema == null) {
             throw new RuntimeException("Must provide sink schema");
         }
         // Set the output schema and output format class
         conf.set(AvroJob.OUTPUT_SCHEMA, schema.toString());
-        conf.setOutputFormat(AvroOutputFormat.class);
+        ((JobConf) conf).setOutputFormat(AvroOutputFormat.class);
 
 
         // add AvroSerialization to io.serializations
@@ -213,7 +214,7 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      * @return Fields The source cascading fields.
      */
     @Override
-    public Fields retrieveSourceFields(FlowProcess<JobConf> flowProcess, Tap tap) {
+    public Fields retrieveSourceFields(FlowProcess<? extends Configuration> flowProcess, Tap tap) {
         if (schema == null) {
             try {
                 schema = getSourceSchema(flowProcess, tap);
@@ -242,7 +243,7 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      */
     @Override
     public boolean source(
-            FlowProcess<JobConf> flowProcess,
+            FlowProcess<? extends Configuration> flowProcess,
             SourceCall<Object[], RecordReader> sourceCall)
             throws IOException {
 
@@ -274,14 +275,14 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      */
     @Override
     public void sourceConfInit(
-            FlowProcess<JobConf> flowProcess,
-            Tap<JobConf, RecordReader, OutputCollector> tap,
-            JobConf conf) {
+            FlowProcess<? extends Configuration> flowProcess,
+            Tap<Configuration, RecordReader, OutputCollector> tap,
+            Configuration conf) {
 
         retrieveSourceFields(flowProcess, tap);
         // Set the input schema and input class
         conf.set(AvroJob.INPUT_SCHEMA, schema.toString());
-        conf.setInputFormat(AvroInputFormat.class);
+        ((JobConf) conf).setInputFormat(AvroInputFormat.class);
 
         // add AvroSerialization to io.serializations
         addAvroSerializations(conf);
@@ -294,7 +295,7 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
      * @param tap         The cascading Tap object.
      * @return Schema The schema of the peeked at data, or Schema.NULL if none exists.
      */
-    private Schema getSourceSchema(FlowProcess<JobConf> flowProcess, Tap tap) throws IOException {
+    private Schema getSourceSchema(FlowProcess<? extends Configuration> flowProcess, Tap tap) throws IOException {
 
         if (tap instanceof CompositeTap) {
             tap = (Tap) ((CompositeTap) tap).getChildTaps().next();
@@ -341,7 +342,7 @@ public class AvroScheme extends Scheme<JobConf, RecordReader, OutputCollector, O
         return Schema.create(Schema.Type.NULL);
     }
 
-    private void addAvroSerializations(JobConf conf) {
+    private void addAvroSerializations(Configuration conf) {
         Collection<String> serializations = conf.getStringCollection("io.serializations");
         if (!serializations.contains(AvroSerialization.class.getName())) {
             serializations.add(AvroSerialization.class.getName());

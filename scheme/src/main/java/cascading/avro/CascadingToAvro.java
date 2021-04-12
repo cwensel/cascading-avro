@@ -14,15 +14,9 @@
 
 package cascading.avro;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
+import cascading.tuple.Fields;
+import cascading.tuple.Tuple;
+import cascading.tuple.TupleEntry;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -32,9 +26,8 @@ import org.apache.avro.generic.GenericData.Fixed;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.hadoop.io.BytesWritable;
 
-import cascading.tuple.Fields;
-import cascading.tuple.Tuple;
-import cascading.tuple.TupleEntry;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class CascadingToAvro {
 
@@ -79,7 +72,7 @@ public class CascadingToAvro {
             Object obj = tuple.getObject(i);
             result[i] = toAvro(obj, field.schema());
         }
-        
+
         return result;
     }
 
@@ -111,7 +104,7 @@ public class CascadingToAvro {
                 for (int i = 0; i < objs.length; i++) {
                     record.put(i, objs[i]);
                 }
-                
+
                 return record;
 
             case MAP:
@@ -162,7 +155,7 @@ public class CascadingToAvro {
                         throw new AvroRuntimeException(String.format("Found map value with %s instead of expected %s",
                                 tuple.getObject(i + 1).getClass(), mapValueType));
                     }
-                    convertedMap.put(tuple.get(i).toString(), toAvro(tuple.get(i + 1), schema.getValueType()));
+                    convertedMap.put(tuple.getObject(i).toString(), toAvro(tuple.getObject(i + 1), schema.getValueType()));
                 }
             } else {
                 throw new AvroRuntimeException("Can't convert from an odd length tuple to a map");
@@ -189,7 +182,7 @@ public class CascadingToAvro {
             for (Object element : (Iterable<Object>) obj) {
                 array.add(toAvro(element, elementSchema));
             }
-            
+
             return new GenericData.Array(schema, array);
         } else
             throw new AvroRuntimeException("Can't convert from non-iterable to array");
@@ -217,7 +210,7 @@ public class CascadingToAvro {
 
     @SuppressWarnings("rawtypes")
     protected static Schema generateAvroSchemaFromTupleEntry(TupleEntry tupleEntry, String recordName,
-            boolean isNullable) {
+                                                             boolean isNullable) {
         Fields tupleFields = tupleEntry.getFields();
         List<Field> avroFields = new ArrayList<Field>();
         for (Comparable fieldName : tupleFields) {
@@ -234,7 +227,7 @@ public class CascadingToAvro {
         return outputSchema;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     protected static Schema generateAvroSchemaFromElement(Object element, String name, boolean isNullable) {
         if (element == null) {
             throw new AvroRuntimeException("Can't infer schema from null valued element");
@@ -298,7 +291,7 @@ public class CascadingToAvro {
     }
 
     public static Schema generateAvroSchemaFromFieldsAndTypes(String recordName, Fields schemeFields,
-            Class<?>[] schemeTypes) {
+                                                              Class<?>[] schemeTypes) {
         if (schemeFields.size() == 0) {
             throw new IllegalArgumentException("There must be at least one field");
         }
@@ -370,9 +363,9 @@ public class CascadingToAvro {
         for (int typeIndex = 0, fieldIndex = 0; typeIndex < schemeTypes.length; typeIndex++, fieldIndex++) {
             String fieldName = schemeFields.get(fieldIndex).toString();
             Class<?>[] subSchemeTypes = new Class[2]; // at most 2, since we
-                                                      // only allow primitive
-                                                      // types for arrays and
-                                                      // maps
+            // only allow primitive
+            // types for arrays and
+            // maps
             subSchemeTypes[0] = schemeTypes[typeIndex];
             if ((schemeTypes[typeIndex] == List.class) || (schemeTypes[typeIndex] == Map.class)) {
                 typeIndex++;
@@ -410,7 +403,7 @@ public class CascadingToAvro {
             if (remainingFields == 0) {
                 schema = Schema.createArray(Schema.create(toAvroSchemaType(fieldTypes[1])));
             } else {
-                Class<?> arrayTypes[] = { fieldTypes[1] };
+                Class<?> arrayTypes[] = {fieldTypes[1]};
                 schema = Schema.createArray(createAvroSchema(recordName,
                         Fields.offsetSelector(schemeFields.size() - 1, 1), arrayTypes, depth + 1));
             }
@@ -420,7 +413,7 @@ public class CascadingToAvro {
             if (remainingFields == 0) {
                 schema = Schema.createMap(Schema.create(toAvroSchemaType(fieldTypes[1])));
             } else {
-                Class<?> mapTypes[] = { fieldTypes[1] };
+                Class<?> mapTypes[] = {fieldTypes[1]};
                 schema = Schema.createMap(createAvroSchema(recordName,
                         Fields.offsetSelector(schemeFields.size() - 1, 1), mapTypes, depth + 1));
             }

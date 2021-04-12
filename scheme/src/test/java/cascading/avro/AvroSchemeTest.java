@@ -1,23 +1,23 @@
 /*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package cascading.avro;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowDef;
-import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.flow.hadoop.HadoopFlowProcess;
+import cascading.flow.hadoop2.Hadoop2MR1FlowConnector;
 import cascading.operation.aggregator.Count;
 import cascading.operation.regex.RegexSplitGenerator;
 import cascading.pipe.Each;
@@ -34,9 +34,9 @@ import cascading.tuple.*;
 import junit.framework.Assert;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.JobConf;
@@ -58,11 +58,11 @@ public class AvroSchemeTest extends Assert {
   @Test
   public void testRoundTrip() throws Exception {
     final Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream(
-        "test1.avsc"));
+            "test1.avsc"));
 
     final Fields fields = new Fields("aBoolean", "anInt", "aLong",
-                                     "aDouble", "aFloat", "aBytes", "aFixed", "aNull", "aString",
-                                     "aList", "aMap", "aUnion");
+            "aDouble", "aFloat", "aBytes", "aFixed", "aNull", "aString",
+            "aList", "aMap", "aUnion");
 
     String in = tempDir.getRoot().toString() + "/testRoundTrip/in";
     String out = tempDir.getRoot().toString() + "/testRoundTrip/out";
@@ -78,21 +78,21 @@ public class AvroSchemeTest extends Assert {
     aList.add(1);
     BytesWritable bytesWritable = new BytesWritable(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     BytesWritable bytesWritable2 = new BytesWritable(new byte[]{1,
-        2, 3});
+            2, 3});
     Tuple tuple = new Tuple(false, 1, 2L, 3.0, 4.0F, bytesWritable2,
-                            bytesWritable, null, "test-string", aList, aMap, 5);
+            bytesWritable, null, "test-string", aList, aMap, 5);
     write.add(new TupleEntry(fields, tuple));
     write.add(new TupleEntry(fields, new Tuple(false, 1, 2L,
-                                               3.0, 4.0F, new BytesWritable(new byte[0]), new BytesWritable(
-        new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4,
-            5, 6}), null, "other string", aList, aMap, null)));
+            3.0, 4.0F, new BytesWritable(new byte[0]), new BytesWritable(
+            new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4,
+                    5, 6}), null, "other string", aList, aMap, null)));
     write.close();
 
 
     Pipe writePipe = new Pipe("tuples to avro");
 
     Tap avroSink = new Lfs(new AvroScheme(schema), out);
-    Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+    Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
     flow.complete();
 
     // Now read it back in, and verify that the data/types match up.
@@ -113,19 +113,19 @@ public class AvroSchemeTest extends Assert {
     assertEquals(bytesWritable, readEntry1.getObject(6));
     assertEquals("test-string", readEntry1.getString(8));
     assertEquals("0", ((List) readEntry1.getObject(9)).get(0)
-        .toString());
+            .toString());
     assertEquals(1,
-                 ((Map) readEntry1.getObject(10)).get("one"));
+            ((Map) readEntry1.getObject(10)).get("one"));
     assertTrue(iterator.hasNext());
     final TupleEntry readEntry2 = iterator.next();
 
-    assertNull(readEntry2.get("aUnion"));
+    assertNull(readEntry2.getObject("aUnion"));
   }
 
   @Test
   public void notUnpackedTest() throws Exception {
     final Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream(
-        "test2.avsc"));
+            "test2.avsc"));
     String in = tempDir.getRoot().toString() + "/recordtest/in";
     String out = tempDir.getRoot().toString() + "/recordtest/out";
     Tap lfsSource = new Lfs(new PackedAvroScheme<Record>(schema), in, SinkMode.REPLACE);
@@ -147,7 +147,7 @@ public class AvroSchemeTest extends Assert {
     Pipe writePipe = new Pipe("tuples to avro");
 
     Tap avroSink = new Lfs(new PackedAvroScheme<Record>(schema), out);
-    Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+    Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
     flow.complete();
 
     // Now read it back in, and verify that the data/types match up.
@@ -169,7 +169,7 @@ public class AvroSchemeTest extends Assert {
   @Test
   public void tupleInsideTupleTest() throws Exception {
     final Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream(
-        "test2.avsc"));
+            "test2.avsc"));
     String in = tempDir.getRoot().toString() + "/tupleInside/in";
     String out = tempDir.getRoot().toString() + "/tupleInside/out";
     Tap lfsSource = new Lfs(new AvroScheme(schema), in, SinkMode.REPLACE);
@@ -190,7 +190,7 @@ public class AvroSchemeTest extends Assert {
     Pipe writePipe = new Pipe("tuples to avro");
 
     Tap avroSink = new Lfs(new AvroScheme(schema), out);
-    Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+    Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
     flow.complete();
 
     // Now read it back in, and verify that the data/types match up.
@@ -202,7 +202,7 @@ public class AvroSchemeTest extends Assert {
     assertTrue(iterator.hasNext());
     final TupleEntry readEntry1 = iterator.next();
 
-    assertTrue(readEntry1.get(0) instanceof Tuple);
+    assertTrue(readEntry1.getObject(0) instanceof Tuple);
     assertEquals(0, ((Tuple) readEntry1.getObject(0)).getInteger(0));
     assertEquals("the string", ((Tuple) readEntry1.getObject(0)).getString(1));
     assertEquals("outer string", readEntry1.getString(1));
@@ -212,7 +212,7 @@ public class AvroSchemeTest extends Assert {
   @Test
   public void listOrMapInsideListTest() throws Exception {
     final Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream(
-        "test4.avsc"));
+            "test4.avsc"));
     final AvroScheme scheme = new AvroScheme(schema);
 
     final Fields fields = new Fields("aListOfListOfInt", "aListOfMapToLong");
@@ -234,7 +234,7 @@ public class AvroSchemeTest extends Assert {
     aListOfListOfInt.add(aListOfInt);
 
     write(scheme, collector, new TupleEntry(fields, new Tuple(
-        aListOfListOfInt, aListOfMapToLong)));
+            aListOfListOfInt, aListOfMapToLong)));
     collector.close();
 
     HadoopFlowProcess readProcess = new HadoopFlowProcess(new JobConf());
@@ -243,9 +243,9 @@ public class AvroSchemeTest extends Assert {
     final TupleEntry readEntry1 = iterator.next();
 
     List<Integer> outListOfInt = (List) ((List) readEntry1
-        .getObject("aListOfListOfInt")).get(0);
+            .getObject("aListOfListOfInt")).get(0);
     Map<Utf8, Long> outMapToLong = (Map) ((List) readEntry1
-        .getObject("aListOfMapToLong")).get(0);
+            .getObject("aListOfMapToLong")).get(0);
 
     assertEquals(Integer.valueOf(0), outListOfInt.get(0));
     assertEquals(Integer.valueOf(1), outListOfInt.get(1));
@@ -258,7 +258,7 @@ public class AvroSchemeTest extends Assert {
   @Test
   public void listOrMapInsideMapTest() throws Exception {
     final Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream(
-        "test3.avsc"));
+            "test3.avsc"));
     final AvroScheme scheme = new AvroScheme(schema);
 
     final Fields fields = new Fields("aMapToListOfInt", "aMapToMapToLong");
@@ -280,7 +280,7 @@ public class AvroSchemeTest extends Assert {
     aMapToListOfInt.put("key", aListOfInt);
 
     write(scheme, collector, new TupleEntry(fields, new Tuple(
-        aMapToListOfInt, aMapToMapToLong)));
+            aMapToListOfInt, aMapToMapToLong)));
     collector.close();
 
     HadoopFlowProcess readProcess = new HadoopFlowProcess(new JobConf());
@@ -289,9 +289,9 @@ public class AvroSchemeTest extends Assert {
     final TupleEntry readEntry1 = iterator.next();
 
     List<Integer> outListOfInt = (List) ((Map) readEntry1
-        .getObject("aMapToListOfInt")).get("key");
+            .getObject("aMapToListOfInt")).get("key");
     Map<String, Long> outMapToLong = (Map) ((Map) readEntry1
-        .getObject("aMapToMapToLong")).get("key");
+            .getObject("aMapToMapToLong")).get("key");
 
     assertEquals(Integer.valueOf(0), outListOfInt.get(0));
     assertEquals(Integer.valueOf(1), outListOfInt.get(1));
@@ -309,7 +309,7 @@ public class AvroSchemeTest extends Assert {
   @Test
   public void testSerialization() throws Exception {
     final Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream(
-        "test1.avsc"));
+            "test1.avsc"));
     final AvroScheme expected = new AvroScheme(schema);
 
     final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -318,7 +318,7 @@ public class AvroSchemeTest extends Assert {
     oos.close();
 
     final ObjectInputStream iis = new ObjectInputStream(
-        new ByteArrayInputStream(bytes.toByteArray()));
+            new ByteArrayInputStream(bytes.toByteArray()));
     final AvroScheme actual = (AvroScheme) iis.readObject();
 
     assertEquals(expected, actual);
@@ -387,9 +387,9 @@ public class AvroSchemeTest extends Assert {
     // Create a scheme that tests each of the supported types
 
     final Fields testFields = new Fields("integerField", "longField", "booleanField", "doubleField", "floatField",
-                                         "stringField", "bytesField", "arrayOfLongsField", "mapOfStringsField", "enumField");
+            "stringField", "bytesField", "arrayOfLongsField", "mapOfStringsField", "enumField");
     final Class<?>[] schemeTypes = {Integer.class, Long.class, Boolean.class, Double.class, Float.class,
-        String.class, BytesWritable.class, List.class, Long.class, Map.class, String.class, TestEnum.class};
+            String.class, BytesWritable.class, List.class, Long.class, Map.class, String.class, TestEnum.class};
     final String in = tempDir.getRoot().toString() + "/testRoundTrip2/in";
     final String out = tempDir.getRoot().toString() + "/testRoundTrip2/out";
     final String verifyout = tempDir.getRoot().toString() + "/testRoundTrip2/verifyout";
@@ -440,7 +440,7 @@ public class AvroSchemeTest extends Assert {
     Pipe writePipe = new Pipe("tuples to avro");
 
     Tap avroSink = new Lfs(new AvroScheme(testFields, schemeTypes), out);
-    Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+    Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
     flow.complete();
 
     // Now read it back in, and verify that the data/types match up.
@@ -501,7 +501,7 @@ public class AvroSchemeTest extends Assert {
     // Ensure that the Avro file we write out is readable via the standard Avro API
     File avroFile = new File(out + "/part-00000.avro");
     DataFileReader<Object> reader =
-        new DataFileReader<Object>(avroFile, new GenericDatumReader<Object>());
+            new DataFileReader<Object>(avroFile, new GenericDatumReader<Object>());
     i = 0;
     while (reader.hasNext()) {
       reader.next();
@@ -534,7 +534,7 @@ public class AvroSchemeTest extends Assert {
       Pipe writePipe = new Pipe("tuples to avro");
 
       Tap avroSink = new Lfs(new AvroScheme(testFields, schemeTypes), out);
-      Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+      Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
       flow.complete();
       fail("Exception should be thrown as there is an invalid array element");
 
@@ -565,7 +565,7 @@ public class AvroSchemeTest extends Assert {
       Pipe writePipe = new Pipe("tuples to avro");
 
       Tap avroSink = new Lfs(new AvroScheme(testFields, schemeTypes), out);
-      Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+      Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
       flow.complete();
       fail("Exception should be thrown as there is an invalid map");
 
@@ -596,7 +596,7 @@ public class AvroSchemeTest extends Assert {
       Pipe writePipe = new Pipe("tuples to avro");
 
       Tap avroSink = new Lfs(new AvroScheme(testFields, schemeTypes), out);
-      Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+      Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
       flow.complete();
       fail("Exception should be thrown as the key isn't a String");
 
@@ -627,7 +627,7 @@ public class AvroSchemeTest extends Assert {
     Pipe writePipe = new Pipe("tuples to avro");
 
     Tap avroSink = new Lfs(new AvroScheme(testFields, schemeTypes), out);
-    Flow flow = new HadoopFlowConnector().connect(lfsSource, avroSink, writePipe);
+    Flow flow = new Hadoop2MR1FlowConnector().connect(lfsSource, avroSink, writePipe);
     flow.complete();
   }
 
@@ -648,10 +648,10 @@ public class AvroSchemeTest extends Assert {
     AvroScheme avroScheme = new AvroScheme(new Fields("a"), new Class[]{TestEnum.class});
     String jsonSchema = avroScheme.getJsonSchema();
     String enumField = String.format("{\"type\":\"enum\",\"name\":\"%s\",\"namespace\":\"%s\",\"symbols\":[\"ONE\",\"TWO\"]}",
-                                     "TestEnum", TestEnum.class.getPackage().getName());
+            "TestEnum", TestEnum.class.getPackage().getName());
 
     String expected = String.format("{\"type\":\"record\",\"name\":\"CascadingAvroRecord\",\"doc\":\"auto generated\",\"fields\":[{\"name\":\"a\",\"type\":[\"null\",%s],\"doc\":\"\"}]}",
-                                    enumField);
+            enumField);
     assertEquals(expected, jsonSchema);
   }
 
@@ -664,11 +664,11 @@ public class AvroSchemeTest extends Assert {
     // Get the schema from a file
     Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream("test6.avsc"));
 
-    HadoopFlowConnector flowConnector = new HadoopFlowConnector();
+    Hadoop2MR1FlowConnector flowConnector = new Hadoop2MR1FlowConnector();
 
     // create source and sink taps
     Tap docTap = new Lfs(new TextLine(new Fields("text")), docPath);
-    Tap wcTap = new Lfs(new AvroScheme(schema), wcPath, true);
+    Tap wcTap = new Lfs(new AvroScheme(schema), wcPath, SinkMode.REPLACE);
 
     // specify a regex operation to split the "document" text lines into a token stream
     Fields token = new Fields("token");
@@ -684,18 +684,18 @@ public class AvroSchemeTest extends Assert {
 
     // connect the taps, pipes, etc., into a flow
     FlowDef flowDef = FlowDef.flowDef()
-        .setName("wc")
-        .addSource(docPipe, docTap)
-        .addTailSink(wcPipe, wcTap);
+            .setName("wc")
+            .addSource(docPipe, docTap)
+            .addTailSink(wcPipe, wcTap);
 
     Flow wcFlow = flowConnector.connect(flowDef);
     wcFlow.complete();
 
-    HadoopFlowConnector flowConnector2 = new HadoopFlowConnector();
+    Hadoop2MR1FlowConnector flowConnector2 = new Hadoop2MR1FlowConnector();
     // create source and sink taps
-    // Source is Avro, note there is no schema needed. 
+    // Source is Avro, note there is no schema needed.
     Tap avroTap = new Lfs(new AvroScheme(), wcPath);
-    Tap finalTap = new Lfs(new TextDelimited(), finalPath, true);
+    Tap finalTap = new Lfs(new TextDelimited(), finalPath, SinkMode.REPLACE);
 
     Pipe avroPipe = new Pipe("wordcount");
     avroPipe = new GroupBy(avroPipe, new Fields("count"));
@@ -704,31 +704,13 @@ public class AvroSchemeTest extends Assert {
 
     // connect the taps, pipes, etc., into a flow
     FlowDef flowDef2 = FlowDef.flowDef()
-        .setName("wc-read")
-        .addSource(avroPipe, avroTap)
-        .addTailSink(avroPipe, finalTap);
+            .setName("wc-read")
+            .addSource(avroPipe, avroTap)
+            .addTailSink(avroPipe, finalTap);
 
     // write a DOT file and run the flow
     Flow wcFlow2 = flowConnector2.connect(flowDef2);
     wcFlow2.complete();
 
-  }
-
-  @Test
-  public void testSerializeExtraLargeSchema() throws Exception {
-    final Schema extraLarge = new Schema.Parser().parse(getClass().getResourceAsStream(
-            "test-extra-large.avsc"));
-    final AvroScheme expected = new AvroScheme(extraLarge);
-
-    final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(bytes);
-    oos.writeObject(expected);
-    oos.close();
-
-    final ObjectInputStream iis = new ObjectInputStream(
-            new ByteArrayInputStream(bytes.toByteArray()));
-    final AvroScheme actual = (AvroScheme) iis.readObject();
-
-    assertEquals(expected, actual);
   }
 }

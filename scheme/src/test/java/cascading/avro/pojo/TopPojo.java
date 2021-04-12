@@ -14,7 +14,9 @@ public class TopPojo extends org.apache.avro.specific.SpecificRecordBase impleme
   @Deprecated public java.util.List<cascading.avro.pojo.EmbeddedPojo> Things;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public TopPojo() {}
 
@@ -126,6 +128,18 @@ public class TopPojo extends org.apache.avro.specific.SpecificRecordBase impleme
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.pojo.TopPojo.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.Id)) {
+        this.Id = data().deepCopy(fields()[0].schema(), other.Id);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.State)) {
+        this.State = data().deepCopy(fields()[1].schema(), other.State);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.Things)) {
+        this.Things = data().deepCopy(fields()[2].schema(), other.Things);
+        fieldSetFlags()[2] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing TopPojo instance */

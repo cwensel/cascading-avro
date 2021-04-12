@@ -23,7 +23,9 @@ public class test1 extends org.apache.avro.specific.SpecificRecordBase implement
   @Deprecated public java.lang.Integer aUnion;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public test1() {}
 
@@ -306,6 +308,54 @@ public class test1 extends org.apache.avro.specific.SpecificRecordBase implement
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.test1.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.aBoolean)) {
+        this.aBoolean = data().deepCopy(fields()[0].schema(), other.aBoolean);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.anInt)) {
+        this.anInt = data().deepCopy(fields()[1].schema(), other.anInt);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.aLong)) {
+        this.aLong = data().deepCopy(fields()[2].schema(), other.aLong);
+        fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.aDouble)) {
+        this.aDouble = data().deepCopy(fields()[3].schema(), other.aDouble);
+        fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.aFloat)) {
+        this.aFloat = data().deepCopy(fields()[4].schema(), other.aFloat);
+        fieldSetFlags()[4] = true;
+      }
+      if (isValidValue(fields()[5], other.aBytes)) {
+        this.aBytes = data().deepCopy(fields()[5].schema(), other.aBytes);
+        fieldSetFlags()[5] = true;
+      }
+      if (isValidValue(fields()[6], other.aFixed)) {
+        this.aFixed = data().deepCopy(fields()[6].schema(), other.aFixed);
+        fieldSetFlags()[6] = true;
+      }
+      if (isValidValue(fields()[7], other.aNull)) {
+        this.aNull = data().deepCopy(fields()[7].schema(), other.aNull);
+        fieldSetFlags()[7] = true;
+      }
+      if (isValidValue(fields()[8], other.aString)) {
+        this.aString = data().deepCopy(fields()[8].schema(), other.aString);
+        fieldSetFlags()[8] = true;
+      }
+      if (isValidValue(fields()[9], other.aList)) {
+        this.aList = data().deepCopy(fields()[9].schema(), other.aList);
+        fieldSetFlags()[9] = true;
+      }
+      if (isValidValue(fields()[10], other.aMap)) {
+        this.aMap = data().deepCopy(fields()[10].schema(), other.aMap);
+        fieldSetFlags()[10] = true;
+      }
+      if (isValidValue(fields()[11], other.aUnion)) {
+        this.aUnion = data().deepCopy(fields()[11].schema(), other.aUnion);
+        fieldSetFlags()[11] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing test1 instance */

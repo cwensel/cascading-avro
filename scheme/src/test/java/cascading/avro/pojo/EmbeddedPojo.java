@@ -14,7 +14,9 @@ public class EmbeddedPojo extends org.apache.avro.specific.SpecificRecordBase im
   @Deprecated public java.lang.CharSequence LastName;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public EmbeddedPojo() {}
 
@@ -126,6 +128,18 @@ public class EmbeddedPojo extends org.apache.avro.specific.SpecificRecordBase im
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.pojo.EmbeddedPojo.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.Age)) {
+        this.Age = data().deepCopy(fields()[0].schema(), other.Age);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.City)) {
+        this.City = data().deepCopy(fields()[1].schema(), other.City);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.LastName)) {
+        this.LastName = data().deepCopy(fields()[2].schema(), other.LastName);
+        fieldSetFlags()[2] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing EmbeddedPojo instance */

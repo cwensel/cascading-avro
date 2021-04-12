@@ -15,7 +15,9 @@ public class DevicePowerEvent extends org.apache.avro.specific.SpecificRecordBas
   @Deprecated public int status;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public DevicePowerEvent() {}
 
@@ -146,6 +148,22 @@ public class DevicePowerEvent extends org.apache.avro.specific.SpecificRecordBas
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.trevni.DevicePowerEvent.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.power)) {
+        this.power = data().deepCopy(fields()[0].schema(), other.power);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.deviceType)) {
+        this.deviceType = data().deepCopy(fields()[1].schema(), other.deviceType);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.deviceId)) {
+        this.deviceId = data().deepCopy(fields()[2].schema(), other.deviceId);
+        fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.status)) {
+        this.status = data().deepCopy(fields()[3].schema(), other.status);
+        fieldSetFlags()[3] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing DevicePowerEvent instance */

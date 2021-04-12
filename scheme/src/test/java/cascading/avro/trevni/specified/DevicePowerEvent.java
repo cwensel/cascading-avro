@@ -12,7 +12,9 @@ public class DevicePowerEvent extends org.apache.avro.specific.SpecificRecordBas
   @Deprecated public double power;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public DevicePowerEvent() {}
 
@@ -86,6 +88,10 @@ public class DevicePowerEvent extends org.apache.avro.specific.SpecificRecordBas
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.trevni.specified.DevicePowerEvent.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.power)) {
+        this.power = data().deepCopy(fields()[0].schema(), other.power);
+        fieldSetFlags()[0] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing DevicePowerEvent instance */

@@ -14,26 +14,24 @@
 
 package cascading.avro;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Parser;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.Fixed;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.BytesWritable;
-import org.hamcrest.core.IsNull;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 public class AvroToCascadingTest {
 
@@ -49,7 +47,7 @@ public class AvroToCascadingTest {
         record.put(3, 0.6f);
         record.put(4, 1.01);
         record.put(5, "This is my string");
-        byte[] buffer_value = { 0, 1, 2, 3, 0, 0, 0 };
+        byte[] buffer_value = {0, 1, 2, 3, 0, 0, 0};
         ByteBuffer buffer = ByteBuffer.wrap(buffer_value);
         record.put(6, buffer);
         Fixed fixed = new Fixed(schema.getField("aFixed").schema(), buffer_value);
@@ -120,7 +118,7 @@ public class AvroToCascadingTest {
     @Test
     public void testFromBytes() {
         Schema fieldSchema = record.getSchema().getField("aBytes").schema();
-        byte[] buffer_value = { 0, 1, 2, 3, 0, 0, 0 };
+        byte[] buffer_value = {0, 1, 2, 3, 0, 0, 0};
         BytesWritable result = new BytesWritable(buffer_value);
 
         BytesWritable outBytes = (BytesWritable) AvroToCascading.fromAvro(record.get("aBytes"), fieldSchema);
@@ -131,7 +129,7 @@ public class AvroToCascadingTest {
     @Test
     public void testFromFixed() {
         Schema fieldSchema = record.getSchema().getField("aFixed").schema();
-        byte[] buffer_value = { 0, 1, 2, 3, 0, 0, 0 };
+        byte[] buffer_value = {0, 1, 2, 3, 0, 0, 0};
         BytesWritable result = new BytesWritable(buffer_value);
 
         BytesWritable outBytes = (BytesWritable) AvroToCascading.fromAvro(record.get("aFixed"), fieldSchema);
@@ -149,7 +147,7 @@ public class AvroToCascadingTest {
 
     @Test
     public void testParseRecord() {
-        byte[] buffer_value = { 0, 1, 2, 3, 0, 0, 0 };
+        byte[] buffer_value = {0, 1, 2, 3, 0, 0, 0};
         BytesWritable bwritable = new BytesWritable(buffer_value);
 
         Object[] output = AvroToCascading.parseRecord(record, record.getSchema());
@@ -174,13 +172,13 @@ public class AvroToCascadingTest {
 
     @Test
     public void testNullFieldValue() {
-    	String schemaStr = "{" +  	
-    			"\"type\":\"record\", " + 
-    		    "\"name\": \"nulltest\"," +
-    			"\"fields\":[" +
-    			"	{\"name\":\"afield\", \"type\":\"string\"}," +
-    	        "   {\"name\":\"aMap\", \"type\":{\"type\":\"map\", \"values\":\"string\"}}," +
-    	        "   {\"name\":\"bMap\", \"type\":{\"type\":\"map\", \"values\":\"string\"}}]}";
+        String schemaStr = "{" +
+                "\"type\":\"record\", " +
+                "\"name\": \"nulltest\"," +
+                "\"fields\":[" +
+                "	{\"name\":\"afield\", \"type\":\"string\"}," +
+                "   {\"name\":\"aMap\", \"type\":{\"type\":\"map\", \"values\":\"string\"}}," +
+                "   {\"name\":\"bMap\", \"type\":{\"type\":\"map\", \"values\":\"string\"}}]}";
 
         Schema schema = new Schema.Parser().parse(schemaStr);
         Record rec = new Record(schema);

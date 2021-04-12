@@ -13,7 +13,9 @@ public class wordcount extends org.apache.avro.specific.SpecificRecordBase imple
   @Deprecated public long count;
 
   /**
-   * Default constructor.
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>. 
    */
   public wordcount() {}
 
@@ -106,6 +108,14 @@ public class wordcount extends org.apache.avro.specific.SpecificRecordBase imple
     /** Creates a Builder by copying an existing Builder */
     private Builder(cascading.avro.wordcount.Builder other) {
       super(other);
+      if (isValidValue(fields()[0], other.token)) {
+        this.token = data().deepCopy(fields()[0].schema(), other.token);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.count)) {
+        this.count = data().deepCopy(fields()[1].schema(), other.count);
+        fieldSetFlags()[1] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing wordcount instance */

@@ -14,23 +14,21 @@
 
 package cascading.avro;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import cascading.tuple.Tuple;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericData.Fixed;
-import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.hadoop.io.BytesWritable;
 
-import cascading.tuple.Tuple;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class AvroToCascading {
 
@@ -52,9 +50,9 @@ public class AvroToCascading {
     }
 
     protected static Object fromAvro(Object obj, Schema schema) {
-    	if (obj == null) {
-    		return null;
-    	}
+        if (obj == null) {
+            return null;
+        }
         switch (schema.getType()) {
 
             case UNION:
@@ -96,7 +94,7 @@ public class AvroToCascading {
     }
 
     protected static Object fromAvroFixed(Object obj, Schema schema) {
-        Fixed fixed = (Fixed) obj;
+        GenericFixed fixed = (GenericFixed) obj;
         return new BytesWritable(fixed.bytes());
     }
 
