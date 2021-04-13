@@ -8,7 +8,8 @@
 .project
 .settings/
 .local.*
-
+.idea
+*.iml
 # Build results
 
 */target/*
