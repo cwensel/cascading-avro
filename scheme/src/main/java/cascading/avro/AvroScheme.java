@@ -60,7 +60,8 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
             return !path.getName().startsWith("_");
         }
     };
-    Schema schema;
+
+    protected Schema schema;
 
     /**
      * Constructor to read from an Avro source or write to an Avro sink without specifying the schema. If using as a sink,
@@ -93,15 +94,8 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
     public AvroScheme(Schema schema) {
         this.schema = schema;
 
-        if (schema == null) {
-            setSinkFields(Fields.ALL);
-            setSourceFields(Fields.UNKNOWN);
-        } else {
-            Fields cascadingFields = new Fields();
-            for (Field avroField : schema.getFields()) {
-                cascadingFields = cascadingFields.append(
-                        new Fields(avroField.name()));
-            }
+        if (schema != null) {
+            Fields cascadingFields = createFields(schema);
             setSinkFields(cascadingFields);
             setSourceFields(cascadingFields);
         }
@@ -120,6 +114,21 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
         } catch (ClassNotFoundException cce) {
             throw new RuntimeException("Unable to read schema which is expected to be written as a java string", cce);
         }
+    }
+
+    protected Fields createFields(Schema schema) {
+        Fields cascadingFields = Fields.NONE;
+
+        for (Field avroField : schema.getFields()) {
+            String name = avroField.name();
+            cascadingFields = cascadingFields.append(new Fields(name));
+        }
+
+        return cascadingFields;
+    }
+
+    public Schema getSchema() {
+        return schema;
     }
 
     /**
@@ -156,7 +165,6 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
         }
         //noinspection unchecked
         sinkCall.getOutput().collect(new AvroWrapper<IndexedRecord>(record), NullWritable.get());
-
     }
 
     /**
@@ -295,12 +303,12 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
      * @param tap         The cascading Tap object.
      * @return Schema The schema of the peeked at data, or Schema.NULL if none exists.
      */
-    private Schema getSourceSchema(FlowProcess<? extends Configuration> flowProcess, Tap tap) throws IOException {
+    protected Schema getSourceSchema(FlowProcess<? extends Configuration> flowProcess, Tap tap) throws IOException {
 
         if (tap instanceof CompositeTap) {
             tap = (Tap) ((CompositeTap) tap).getChildTaps().next();
         }
-        final String path = tap.getIdentifier();
+        final String path = tap.getFullIdentifier(flowProcess);
         Path p = new Path(path);
         final FileSystem fs = p.getFileSystem(flowProcess.getConfigCopy());
         // Get all the input dirs
