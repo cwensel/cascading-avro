@@ -1,19 +1,33 @@
-# cascading.avro-scheme
+# Cascading Avro
 
-Cascading scheme for reading and writing data serialized using Apache Avro. This project provides several
-schemes that work off an Avro record schema.
+This is a fork of https://github.com/ScaleUnlimited/cascading.avro providing an updated library
+supporting [Cascading 4.x](https://github.com/cwensel/cascading).
 
-- AvroScheme - sources and sinks tuples with fields named and ordered according to a given Avro schema or a list of Fields and Types. If no schema is specified in a source it will peek at the data and get the schema. A sink schema is required (for now). 
+Note these artifacts are available on [GitHub packages](https://github.com/cwensel?tab=packages).
 
-Avro Maps will be read in and converted to Java Maps. Avro Arrays will be read in and converted to Java Lists. In order to use this feature you will need to provide Hadoop with a way to serialize Java Maps and Lists, such as cascading.kryo. 
+## cascading.avro-scheme
 
-When writing to Avro an Avro Array can be made from either a Java List or a Cascading Tuple. The same applies for an Avro Map. In the case of a Map, the incoming Cascading Tuple will be taken two entries at a time, the first will be the key for the Avro Map and the second will be the value. 
+Cascading scheme for reading and writing data serialized using Apache Avro. This project provides several schemes that
+work off an Avro record schema.
 
-The current implementation supports all Avro types including nested records. A nested record will be written as a new Cascading TupleEntry inside the proper Tuple Field. To write a nested record to Avro you must provide a TupleEntry with proper field names. 
+- AvroScheme - sources and sinks tuples with fields named and ordered according to a given Avro schema or a list of
+  Fields and Types. If no schema is specified in a source it will peek at the data and get the schema. A sink schema is
+  required (for now).
 
-The current version of cascading.avro is compatibile with Cascading 2.x. Please see the 1.0 branch for a Cascading 1.2.x version. 
+Avro Maps will be read in and converted to Java Maps. Avro Arrays will be read in and converted to Java Lists. In order
+to use this feature you will need to provide Hadoop with a way to serialize Java Maps and Lists, such as cascading.kryo.
 
-# cascading.avro-maven-plugin
+When writing to Avro an Avro Array can be made from either a Java List or a Cascading Tuple. The same applies for an
+Avro Map. In the case of a Map, the incoming Cascading Tuple will be taken two entries at a time, the first will be the
+key for the Avro Map and the second will be the value.
+
+The current implementation supports all Avro types including nested records. A nested record will be written as a new
+Cascading TupleEntry inside the proper Tuple Field. To write a nested record to Avro you must provide a TupleEntry with
+proper field names.
+
+The current version of cascading.avro is compatible with Cascading 4.x.
+
+## cascading.avro-maven-plugin
 
 An Apache Maven plugin that generates classes with field name constants based on an Avro record schema. This plugin
 is similar to the standard Avro schema plugin used to generate specific objects for Avro records. The plugin creates

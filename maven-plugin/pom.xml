@@ -19,9 +19,9 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>cascading.avro</groupId>
-  <artifactId>avro-maven-plugin</artifactId>
-  <version>2.6-SNAPSHOT</version>
+  <groupId>net.wensel</groupId>
+  <artifactId>cascading-avro-maven-plugin</artifactId>
+  <version>2.7-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>Cascading field name generator for Avro</name>
@@ -30,9 +30,9 @@
   </description>
 
   <scm>
-    <connection>scm:git:git://github.com/ScaleUnlimited/cascading.avro.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:ScaleUnlimited/cascading.avro.git</developerConnection>
-    <url>https://github.com/ScaleUnlimited/cascading.avro</url>
+    <connection>scm:git:git://github.com/cwensel/cascading-avro.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:cwensel/cascading-avro.git</developerConnection>
+    <url>https://github.com/cwensel/cascading-avro</url>
   </scm>
 
   <properties>
@@ -80,9 +80,9 @@
 
   <distributionManagement>
     <repository>
-      <id>conjars</id>
-      <name>Concurrent Conjars repository</name>
-      <url>https://conjars.org/repo</url>
+      <id>github</id>
+      <name>Cascading GitHub repository</name>
+      <url>https://maven.pkg.github.com/cwensel/cascading-avro/</url>
     </repository>
   </distributionManagement>
 
