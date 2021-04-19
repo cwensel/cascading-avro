@@ -51,24 +51,32 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollector, Object[], Object[]> {
+public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollector, AvroScheme.SourceContext, AvroScheme.SinkContext> {
 
     private static final String DEFAULT_RECORD_NAME = "CascadingAvroRecord";
-    private static final PathFilter filter = new PathFilter() {
-        @Override
-        public boolean accept(Path path) {
-            return !path.getName().startsWith("_");
-        }
-    };
-
+    private static final PathFilter filter = path -> !path.getName().startsWith("_");
     protected Schema schema;
+
+    protected static class SourceContext {
+
+        public AvroWrapper<IndexedRecord> key;
+        public Writable value;
+
+        public SourceContext(AvroWrapper<IndexedRecord> key, Writable value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    protected static class SinkContext {
+
+    }
 
     /**
      * Constructor to read from an Avro source or write to an Avro sink without specifying the schema. If using as a sink,
      * the sink Fields must have type information and currently Map and List are not supported.
      */
     public AvroScheme() {
-        this(null);
     }
 
     /**
@@ -92,12 +100,10 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
      *               if the AvroScheme is used as a sink and no schema is supplied.
      */
     public AvroScheme(Schema schema) {
-        this.schema = schema;
+        setSchema(schema);
 
-        if (schema != null) {
-            Fields cascadingFields = createFields(schema);
-            setSinkFields(cascadingFields);
-            setSourceFields(cascadingFields);
+        if (getSchema() != null) {
+            setFieldsFrom(getSchema());
         }
     }
 
@@ -116,6 +122,12 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
         }
     }
 
+    protected void setFieldsFrom(Schema schema) {
+        Fields cascadingFields = createFields(schema);
+        setSinkFields(cascadingFields);
+        setSourceFields(cascadingFields);
+    }
+
     protected Fields createFields(Schema schema) {
         Fields cascadingFields = Fields.NONE;
 
@@ -129,6 +141,10 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
 
     public Schema getSchema() {
         return schema;
+    }
+
+    protected void setSchema(Schema schema) {
+        this.schema = schema;
     }
 
     /**
@@ -154,34 +170,17 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
     @Override
     public void sink(
             FlowProcess<? extends Configuration> flowProcess,
-            SinkCall<Object[], OutputCollector> sinkCall)
+            SinkCall<SinkContext, OutputCollector> sinkCall)
             throws IOException {
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry();
 
-        IndexedRecord record = new Record((Schema) sinkCall.getContext()[0]);
-        Object[] objectArray = CascadingToAvro.parseTupleEntry(tupleEntry, (Schema) sinkCall.getContext()[0]);
+        IndexedRecord record = new Record(schema);
+        Object[] objectArray = CascadingToAvro.parseTupleEntry(tupleEntry, schema);
         for (int i = 0; i < objectArray.length; i++) {
             record.put(i, objectArray[i]);
         }
         //noinspection unchecked
         sinkCall.getOutput().collect(new AvroWrapper<IndexedRecord>(record), NullWritable.get());
-    }
-
-    /**
-     * Sink prepare method called by cascading once on each reducer. This method stuffs the schema into a context
-     * for easy access by the sink method.
-     *
-     * @param flowProcess The cascading FlowProcess object. Should be passed in by cascading automatically.
-     * @param sinkCall    The cascading SinkCall object. Should be passed in by cascading automatically.
-     * @throws IOException
-     */
-    @Override
-    public void sinkPrepare(
-            FlowProcess<? extends Configuration> flowProcess,
-            SinkCall<Object[], OutputCollector> sinkCall)
-            throws IOException {
-        sinkCall.setContext(new Object[]{schema});
-
     }
 
     /**
@@ -230,14 +229,9 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
                 throw new RuntimeException("Can't get schema from data source");
             }
         }
-        Fields cascadingFields = new Fields();
-        if (schema.getType().equals(Schema.Type.NULL)) {
-            cascadingFields = Fields.NONE;
-        } else {
-            for (Field avroField : schema.getFields())
-                cascadingFields = cascadingFields.append(new Fields(avroField.name()));
-        }
-        setSourceFields(cascadingFields);
+
+        setSourceFields(createFields(getSchema()));
+
         return getSourceFields();
     }
 
@@ -252,14 +246,18 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
     @Override
     public boolean source(
             FlowProcess<? extends Configuration> flowProcess,
-            SourceCall<Object[], RecordReader> sourceCall)
+            SourceCall<SourceContext, RecordReader> sourceCall)
             throws IOException {
 
-        @SuppressWarnings("unchecked") RecordReader<AvroWrapper<IndexedRecord>, Writable> input = sourceCall.getInput();
-        AvroWrapper<IndexedRecord> wrapper = input.createKey();
-        if (!input.next(wrapper, input.createValue())) {
+        RecordReader<AvroWrapper<IndexedRecord>, Writable> input = sourceCall.getInput();
+
+        AvroWrapper<IndexedRecord> wrapper = sourceCall.getContext().key;
+        Writable value = sourceCall.getContext().value;
+
+        if (!input.next(wrapper, value)) {
             return false;
         }
+
         IndexedRecord record = wrapper.datum();
         Tuple tuple = sourceCall.getIncomingEntry().getTuple();
         tuple.clear();
@@ -268,6 +266,17 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
         tuple.addAll(split);
 
         return true;
+    }
+
+    @Override
+    public void sourcePrepare(FlowProcess<? extends Configuration> flowProcess, SourceCall<SourceContext, RecordReader> sourceCall) throws IOException {
+        sourceCall.setContext(createSourceContext(sourceCall));
+    }
+
+    protected SourceContext createSourceContext(SourceCall<SourceContext, RecordReader> sourceCall) {
+        RecordReader<AvroWrapper<IndexedRecord>, Writable> input = sourceCall.getInput();
+
+        return new SourceContext(input.createKey(), input.createValue());
     }
 
     /**
