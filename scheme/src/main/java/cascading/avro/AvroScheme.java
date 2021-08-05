@@ -258,14 +258,19 @@ public class AvroScheme extends Scheme<Configuration, RecordReader, OutputCollec
             return false;
         }
 
+        parseAvroWrapper(sourceCall, wrapper);
+
+        return true;
+    }
+
+    protected void parseAvroWrapper(SourceCall<SourceContext, RecordReader> sourceCall, AvroWrapper<IndexedRecord> wrapper) {
         IndexedRecord record = wrapper.datum();
         Tuple tuple = sourceCall.getIncomingEntry().getTuple();
         tuple.clear();
 
         Object[] split = AvroToCascading.parseRecord(record, schema);
-        tuple.addAll(split);
 
-        return true;
+        tuple.addAll(split);
     }
 
     @Override
